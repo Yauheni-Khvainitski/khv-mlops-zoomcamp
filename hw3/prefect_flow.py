@@ -16,6 +16,7 @@ from prefect import flow, task
 from prefect.task_runners import SequentialTaskRunner
 
 
+@task
 def read_dataframe(filename):
     df = pd.read_parquet(filename)
 
@@ -34,9 +35,9 @@ def read_dataframe(filename):
 
 
 @task
-def add_features(train_path, val_path):
-    df_train = read_dataframe(train_path)
-    df_val = read_dataframe(val_path)
+def add_features(df_train, df_val):
+    # df_train = read_dataframe(train_path)
+    # df_val = read_dataframe(val_path)
     
     print(len(df_train))
     print(len(df_val))
@@ -143,11 +144,23 @@ def main(train_path="./data/green_tripdata_2021-01.parquet",
          val_path="./data/green_tripdata_2021-02.parquet"):
     mlflow.set_tracking_uri("sqlite:///mlflow.db")
     mlflow.set_experiment("nyc-taxi-experiment")
-
-    X_train, X_val, y_train, y_val, dv = add_features(train_path, val_path).result()
+    X_train = read_dataframe(train_path)
+    X_val = read_dataframe(val_path)
+    X_train, X_val, y_train, y_val, dv = add_features(X_train, X_val).result()
     train = xgb.DMatrix(X_train, label=y_train)
     valid = xgb.DMatrix(X_val, label=y_val)
     train_model_search(train, valid, y_val)
     train_best_model(train, valid, y_val, dv)
 
-main()
+from prefect.deployments import DeploymentSpec
+from prefect.orion.schemas.schedules import IntervalSchedule
+from prefect.flow_runners import SubprocessFlowRunner
+from datetime import timedelta
+
+DeploymentSpec(
+    flow=main,
+    name="model_training",
+    schedule=IntervalSchedule(interval=timedelta(minutes=5)),
+    flow_runner=SubprocessFlowRunner(),
+    tags=["ml"]
+)
