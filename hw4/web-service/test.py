@@ -12,6 +12,6 @@ ride = {
 # preds = predict.predict(features)
 # print(preds)
 
-url = 'http://127.0.0.1:9696/predict'
+url = 'http://52.201.248.234:9696/predict' # 'http://127.0.0.1:9696/predict'
 response = requests.post(url, json=ride)
 print(response.json())

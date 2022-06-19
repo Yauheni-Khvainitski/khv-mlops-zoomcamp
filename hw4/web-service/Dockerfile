@@ -1,15 +1,17 @@
 FROM python:3.9.7-slim
 
 RUN pip install -U pip
-RUN pip install pipenv
+# RUN pip install pipenv
 
 WORKDIR /app
 
-COPY [ "Pipfile", "Pipfile.lock", "./" ]
+# COPY [ "Pipfile", "Pipfile.lock", "./" ]
+COPY [ "requirements.txt", "predict.py", "lin_reg.bin", "./" ]
 
-RUN pipenv install --system --deploy
+# RUN pipenv install --system --deploy
+RUN pip install -r requirements.txt
 
-COPY [ "predict.py", "lin_reg.bin", "./" ]
+# COPY [ "predict.py", "lin_reg.bin", "./" ]
 
 EXPOSE 9696
 
