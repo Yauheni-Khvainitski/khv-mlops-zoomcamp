@@ -1,15 +1,20 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-import os
 import sys
 
 import uuid
 
+from datetime import datetime
+
 import pandas as pd
 
 import mlflow
+
+from prefect import task, flow, get_run_logger
+from prefect.context import get_run_context
+
+from dateutil.relativedelta import relativedelta
 
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.ensemble import RandomForestRegressor
@@ -53,21 +58,9 @@ def load_model(run_id):
     model = mlflow.pyfunc.load_model(logged_model)
     
     return model
-    
 
-def apply_model(input_file, run_id, output_file):
 
-    print(f'reading the data from {input_file}...')
-    df = read_dataframe(input_file)
-    dicts = prepare_dictionaries(df)
-    
-    print(f'loading the model with RUN_ID={run_id}...')
-    model = load_model(run_id)
-
-    print('applying the model ...')
-    y_pred = model.predict(dicts)
-    
-    print(f'saving the results to {output_file}...')
+def save_results(df, y_pred, run_id, output_file):
     df_result = pd.DataFrame()
     df_result['ride_id'] = df['ride_id']
     df_result['lpep_pickup_datetime'] = df['lpep_pickup_datetime']
@@ -81,15 +74,52 @@ def apply_model(input_file, run_id, output_file):
     df_result.to_parquet(output_file, index=False)
 
 
-def run():
-    taxi_type = sys.argv[1]  # green
-    year = int(sys.argv[2])  # 2021
-    month = int(sys.argv[3]) # 3
-    run_id = sys.argv[4] # RUN_ID = os.getenv('RUN_ID', '22a623478ff84c878a59da6101e891da')
-    
+@task
+def apply_model(input_file, run_id, output_file):
+    logger = get_run_logger()
 
-    input_file = f'https://s3.amazonaws.com/nyc-tlc/trip+data/{taxi_type}_tripdata_{year:04d}-{month:02d}.parquet'
-    output_file = f'output/{taxi_type}/{year:04d}-{month:02d}.parquet'
+    logger.info(f'reading the data from {input_file}...')
+    df = read_dataframe(input_file)
+    dicts = prepare_dictionaries(df)
+    
+    logger.info(f'loading the model with RUN_ID={run_id}...')
+    model = load_model(run_id)
+
+    logger.info('applying the model ...')
+    y_pred = model.predict(dicts)
+
+    logger.info(f'saving the results to {output_file}...')
+    save_results(
+        df=df,
+        y_pred=y_pred,
+        run_id=run_id,
+        output_file=output_file
+    )
+
+    return output_file
+
+
+def get_paths(run_date, taxi_type, run_id):
+    prev_month = run_date - relativedelta(months=1)
+    year = prev_month.year
+    month = prev_month.month
+
+    input_file = f's3://nyc-tlc/trip data/{taxi_type}_tripdata_{year:04d}-{month:02d}.parquet'
+    output_file = f's3://nyc-taxi-duration-prediction/output/taxi_type={taxi_type}/year={year:04d}/month={month:02d}/{run_id}.parquet'
+
+    return input_file, output_file
+
+
+@flow
+def ride_duration_prediction(
+        taxi_type: str,
+        run_id: str,
+        run_date: datetime = None):
+    if run_date is None:
+        ctx = get_run_context()
+        run_date = ctx.flow_run.expected_start_time
+
+    input_file, output_file = get_paths(run_date, taxi_type, run_id)
 
     apply_model(
         input_file=input_file,
@@ -97,5 +127,19 @@ def run():
         output_file=output_file
     )
 
+
+def run():
+    taxi_type = sys.argv[1]  # green
+    year = int(sys.argv[2])  # 2021
+    month = int(sys.argv[3]) # 3
+    run_id = sys.argv[4] # RUN_ID = os.getenv('RUN_ID', '22a623478ff84c878a59da6101e891da')
+
+    ride_duration_prediction(
+        taxi_type=taxi_type,
+        run_id=run_id,
+        run_date=datetime(year=year, month=month, day=1)
+    )
+
+    
 if __name__ == "__main__":
     run()
