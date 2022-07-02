@@ -9,7 +9,7 @@ from flask import Flask, request, jsonify
 
 MODEL_FILE = os.getenv('MODEL_FILE', 'lin_reg.bin')
 MONGODB_ADDRESS = os.getenv('MONGODB_ADDRESS', 'mongodb://127.0.0.1:27017')
-EVIDENTLY_SERVICE_ADDRESS = os.getenv('EVIDENTLY_SERVICE_', 'http://127.0.0.1:8085')
+EVIDENTLY_SERVICE_ADDRESS = os.getenv('EVIDENTLY_SERVICE_', 'http://127.0.0.1:5000')
 
 
 with open(MODEL_FILE, 'rb') as f_in:
@@ -48,8 +48,8 @@ def predict():
         'duration': float(y_pred),
     }
 
-    save_to_db(record, float(y_pred))
-    send_to_evidently_service(record, float(y_pred))
+    # save_to_db(record, float(y_pred))
+    # send_to_evidently_service(record, float(y_pred))
     return jsonify(result)
 
 
