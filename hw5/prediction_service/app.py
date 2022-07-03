@@ -48,7 +48,7 @@ def predict():
         'duration': float(y_pred),
     }
 
-    # save_to_db(record, float(y_pred))
+    save_to_db(record, float(y_pred))
     # send_to_evidently_service(record, float(y_pred))
     return jsonify(result)
 
