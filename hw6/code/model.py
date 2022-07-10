@@ -64,7 +64,7 @@ class ModelService():
                 }
             }
 
-            for callback in self.callbacks():
+            for callback in self.callbacks:
                 callback(prediction_event)
 
             # if not TEST_RUN:
