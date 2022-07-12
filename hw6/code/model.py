@@ -6,10 +6,23 @@ import base64
 import mlflow
 
 
+def get_model_location(run_id):
+    model_location = os.getenv('MODEL_LOCATION', 'mlflow-artifacts-remote-test')
+
+    if model_location is not None:
+        return model_location
+
+    model_bucket = os.getenv('MODEL_BUCKET', 'mlflow-artifacts-remote-test')
+    experiment_id = os.getenv('MLFLOW_EXPERIMENT_ID', '2')
+
+    model_location = f's3://{model_bucket}/{experiment_id}/{run_id}/artifacts/models'
+
+    return model_path
+
+
 def load_model(run_id):
-    logged_model = f's3://mlflow-artifacts-remote-test/2/{run_id}/artifacts/models'
-    # logged_model = f'runs:/{RUN_ID}/model'
-    model = mlflow.pyfunc.load_model(logged_model)
+    model_path = get_model_location(run_id)
+    model = mlflow.pyfunc.load_model(model_path)
     return model
 
 
@@ -109,5 +122,9 @@ def init(prediction_sream_name: str, run_id: str, test_run: bool):
         kinesis_callback = KinesisCallback(kinesis_client, prediction_sream_name)
         callbacks.append(kinesis_callback.put_record)
 
-    model_service = ModelService(model)
+    model_service = ModelService(
+        model=model, 
+        model_version=run_id,
+        callbacks=callbacks
+        )
     return model_service
