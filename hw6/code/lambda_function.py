@@ -10,7 +10,7 @@ TEST_RUN = os.getenv('TEST_RUN', 'False') == 'True'
 model_service = model.init(
     prediction_sream_name=PREDICTIONS_STREAM_NAME,
     run_id=RUN_ID,
-    test_run=TEST_RUN
+    test_run=TEST_RUN,
 )
 
 
