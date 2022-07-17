@@ -38,3 +38,9 @@ kinesis get-records --shard-iterator "AAAAAAAAAAE7OtYpjU4NgjZtr7y894DdmzBCFQxdGD
 
 echo "eyJtb2RlbCI6ICJyaWRlX2R1cmF0aW9uX3ByZWRpY3Rpb25fbW9kZWwiLCAidmVyc2lvbiI6ICJUZXN0MTIzIiwgInByZWRpY3Rpb24iOiB7InJpZGVfZHVyYXRpb24iOiAxOC4xNjg5NDU3MjY0MDUzMjYsICJyaWRlX2lkIjogMjU2fX0=" | \
 base64 --decode
+
+
+
+isort .
+black .
+pylint --recursive=y .

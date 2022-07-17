@@ -1,6 +1,6 @@
 import os
-import model
 
+import model
 
 PREDICTIONS_STREAM_NAME = os.getenv('PREDICTIONS_STREAM_NAME', 'ride_predictions')
 RUN_ID = os.getenv('RUN_ID', '22a623478ff84c878a59da6101e891da')

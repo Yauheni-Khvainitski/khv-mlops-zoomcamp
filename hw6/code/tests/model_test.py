@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import model
 
 
@@ -16,8 +17,8 @@ def test_bas64_decode():
             "PULocationID": 130,
             "DOLocationID": 205,
             "trip_distance": 3.66,
-        }, 
-        "ride_id": 256
+        },
+        "ride_id": 256,
     }
 
     assert actual_result == expected_result
@@ -44,14 +45,12 @@ def test_prepare_features():
 
 
 class ModelMock:
-
     def __init__(self, value):
         self.value = value
 
     def predict(self, X):
         n = len(X)
         return [self.value] * n
-
 
 
 def test_predict():
