@@ -1,0 +1,6 @@
+__pycache__/
+.vscode/
+hw3/data/
+hw3/prefect_storage/
+*.ipynb_checkpoints*
+hw4/hw/output

@@ -44,3 +44,4 @@ base64 --decode
 isort .
 black .
 pylint --recursive=y .
+pytest tests/
