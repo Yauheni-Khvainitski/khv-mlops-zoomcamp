@@ -4,3 +4,9 @@ hw3/data/
 hw3/prefect_storage/
 *.ipynb_checkpoints*
 hw4/hw/output
+*.terraform/
+hw4/batch/local_prefect_storage_tmp/
+hw5/evidently_service/datasets/green_tripdata_2021-01.parquet
+hw5/green_tripdata_2022-01.parquet
+*.terraform.lock.hcl
+hw5/target.csv
