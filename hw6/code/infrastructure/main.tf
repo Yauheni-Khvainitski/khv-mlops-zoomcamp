@@ -24,6 +24,22 @@ module "source_kinesis_stream" {
   source = "./modules/kinesis"
   retention_period = 48
   shard_count = 2
-  stream_name = "${var.source_stream_name}-${var.project_id}"
+  stream_name = "${var.env}-${var.source_stream_name}-${var.project_id}"
+  tags = var.project_id
+}
+
+# ride_predictions
+module "output_kinesis_stream" {
+  source = "./modules/kinesis"
+  retention_period = 48
+  shard_count = 2
+  stream_name = "${var.env}-${var.output_stream_name}-${var.project_id}"
+  tags = var.project_id
+}
+
+# model bucket
+module "s3_bucket" {
+  source = "./modules/s3"
+  bucket_name = "${var.env}-${var.model_bucket}-${var.project_id}"
   tags = var.project_id
 }
