@@ -1,22 +1,38 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import os
 import sys
 import pickle
 import pandas as pd
 
 
-year = 2022 # int(sys.argv[1])
-month = 6   #int(sys.argv[2])
+year  = 2021 # int(sys.argv[1])
+month = 1   #int(sys.argv[2])
 
-input_file = f'https://raw.githubusercontent.com/alexeygrigorev/datasets/master/nyc-tlc/fhv/fhv_tripdata_{year:04d}-{month:02d}.parquet'
-output_file = f's3://nyc-taxi-duration-prediction/output/taxi_type=fhv/year={year:04d}/month={month:02d}/predictions.parquet'
+options = {
+        'client_kwargs': {
+            'endpoint_url': "http://localhost:4566"
+        }
+    }
 
 with open('model.bin', 'rb') as f_in:
     dv, lr = pickle.load(f_in)
 
+def get_input_path(year, month):
+    default_input_pattern = f'https://raw.githubusercontent.com/alexeygrigorev/datasets/master/nyc-tlc/fhv/fhv_tripdata_{year:04d}-{month:02d}.parquet'
+    # input_pattern = os.getenv('INPUT_FILE_PATTERN', default_input_pattern)
+    # return input_pattern.format(year=year, month=month)
+    return default_input_pattern
+
+def get_output_path(year, month):
+    default_output_pattern = 's3://nyc-taxi-duration-prediction/output/taxi_type=fhv/year={year:04d}/month={month:02d}/predictions.parquet'
+    output_pattern = os.getenv('OUTPUT_FILE_PATTERN', default_output_pattern)
+    return output_pattern.format(year=year, month=month)
+
 def read_data(filename):
-    df = pd.read_parquet(filename)
+    print(filename)
+    df = pd.read_parquet(filename) #, storage_options=options)
     return df
 
 def prepare_data(df, categorical_features):
@@ -30,10 +46,13 @@ def prepare_data(df, categorical_features):
 
 def main(year, month):
 
-    init_df = read_data(input_file)
+    input_file = get_input_path(year, month)
+    output_file = get_output_path(year, month)
+
+    df_input = read_data(input_file)
 
     categorical = ['PUlocationID', 'DOlocationID']
-    df = prepare_data(init_df, categorical)
+    df = prepare_data(df_input, categorical)
 
     df['ride_id'] = f'{year:04d}/{month:02d}_' + df.index.astype('str')
 
@@ -47,7 +66,15 @@ def main(year, month):
     df_result['ride_id'] = df['ride_id']
     df_result['predicted_duration'] = y_pred
 
-    df_result.to_parquet(output_file, engine='pyarrow', index=False)
+    df_result.to_parquet(
+        output_file,
+        engine='pyarrow', 
+        compression=None,
+        index=False,
+        storage_options=options
+    )
+
+    print(output_file)
 
 if __name__ == "__main__":
     main(year, month)
