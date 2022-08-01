@@ -5,15 +5,11 @@ name = "pypi"
 
 [packages]
 scikit-learn = "==1.0.2"
-mlflow = "*"
 pandas = "*"
-boto3 = "*"
 pyarrow = "*"
-prefect = "==2.0b6"
 s3fs = "*"
 
 [dev-packages]
-pytest = "*"
 
 [requires]
 python_version = "3.9"
