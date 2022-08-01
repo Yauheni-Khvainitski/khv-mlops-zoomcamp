@@ -6,8 +6,8 @@ import pickle
 import pandas as pd
 
 
-year = int(sys.argv[1])
-month = int(sys.argv[2])
+year = 2022 # int(sys.argv[1])
+month = 6   #int(sys.argv[2])
 
 input_file = f'https://raw.githubusercontent.com/alexeygrigorev/datasets/master/nyc-tlc/fhv/fhv_tripdata_{year:04d}-{month:02d}.parquet'
 output_file = f's3://nyc-taxi-duration-prediction/output/taxi_type=fhv/year={year:04d}/month={month:02d}/predictions.parquet'
@@ -15,23 +15,26 @@ output_file = f's3://nyc-taxi-duration-prediction/output/taxi_type=fhv/year={yea
 with open('model.bin', 'rb') as f_in:
     dv, lr = pickle.load(f_in)
 
-def read_data(filename, categorical_features):
+def read_data(filename):
     df = pd.read_parquet(filename)
-    
+    return df
+
+def prepare_data(df, categorical_features):
     df['duration'] = df.dropOff_datetime - df.pickup_datetime
     df['duration'] = df.duration.dt.total_seconds() / 60
 
     df = df[(df.duration >= 1) & (df.duration <= 60)].copy()
 
     df[categorical_features] = df[categorical_features].fillna(-1).astype('int').astype('str')
-    
     return df
 
 def main(year, month):
 
-    categorical = ['PUlocationID', 'DOlocationID']
+    init_df = read_data(input_file)
 
-    df = read_data(input_file, categorical)
+    categorical = ['PUlocationID', 'DOlocationID']
+    df = prepare_data(init_df, categorical)
+
     df['ride_id'] = f'{year:04d}/{month:02d}_' + df.index.astype('str')
 
     dicts = df[categorical].to_dict(orient='records')
