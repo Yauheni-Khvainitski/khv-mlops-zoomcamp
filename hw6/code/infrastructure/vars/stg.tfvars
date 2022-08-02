@@ -1,0 +1,7 @@
+env = "stg"
+source_stream_name = "ride-events"
+output_stream_name = "ride-predictions"
+model_bucket = "mlflow-models-khv"
+lambda_function_local_path = "../lambda_function.py"
+docker_image_local_path = "../Dockerfile"
+ecr_repo_name = "stream-model-duration"

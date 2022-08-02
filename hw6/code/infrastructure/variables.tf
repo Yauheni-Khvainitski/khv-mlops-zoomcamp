@@ -15,15 +15,24 @@ variable "project_id" {
 
 variable "source_stream_name" {
     description = "Input data stream name (producer)"
-    default     = "ride-events"
 }
 
 variable "output_stream_name" {
     description = "Output data stream name (consumer)"
-    default     = "ride-predictions"
 }
 
 variable "model_bucket" {
   description = "Name of the S3 bucket"
-  default     = "ride-predictions"
+}
+
+variable "lambda_function_local_path" {
+  description = "lambda local path for ecr image"
+}
+
+variable "docker_image_local_path" {
+  description = "Dockerfile local path for dockerizing lambda"
+}
+
+variable "ecr_repo_name" {
+  description = "ecr repo name"
 }
