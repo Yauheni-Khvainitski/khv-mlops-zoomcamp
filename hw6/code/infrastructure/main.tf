@@ -52,3 +52,14 @@ module "ecr_image" {
    lambda_function_local_path = var.lambda_function_local_path
    docker_image_local_path = var.docker_image_local_path
 }
+
+module "lambda_function" {
+  source = "./modules/lambda"
+  image_uri = module.ecr_image.image_uri
+  lambda_function_name = "${var.env}-${var.lambda_function_name}_${var.project_id}"
+  model_bucket = module.s3_bucket.name
+  output_stream_name = module.output_kinesis_stream.stream_name
+  output_stream_arn = module.output_kinesis_stream.stream_arn
+  source_stream_name = module.source_kinesis_stream.stream_name
+  source_stream_arn = module.source_kinesis_stream.stream_arn
+}
